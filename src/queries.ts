@@ -14,28 +14,32 @@ import type {
 export function getAirportByICAO(icao: string): Airport | undefined {
   const db = getDatabase();
 
+  const airportRow = db
+    .prepare("SELECT id FROM airports WHERE icao = ?")
+    .get(icao) as { id: number } | undefined;
+
+  if (!airportRow) return undefined;
+
   const identity = db
     .prepare(
       `SELECT 
         icao, iata, faa, local, name, type, type_source as typeSource, 
         status, is_public_use as isPublicUse
-      FROM airports WHERE icao = ?`,
+      FROM airports WHERE id = ?`,
     )
-    .get(icao) as any;
-
-  if (!identity) return undefined;
+    .get(airportRow.id) as any;
 
   const location = db
     .prepare(
       `SELECT 
         latitude, longitude, elevation_ft as elevationFt, country, country_code as countryCode,
         state, county, city, zip, timezone, magnetic_variation as magneticVariation
-      FROM airports WHERE icao = ?`,
+      FROM airports WHERE id = ?`,
     )
-    .get(icao) as any;
+    .get(airportRow.id) as any;
 
-  const infrastructure = getInfrastructureByICAO(icao);
-  const operational = getOperationalByICAO(icao);
+  const infrastructure = getInfrastructureById(airportRow.id);
+  const operational = getOperationalById(airportRow.id);
 
   if (!location) return undefined;
 
@@ -159,8 +163,8 @@ export function getAirportsWithTowers(): Airport[] {
 /**
  * Get infrastructure details for an airport
  */
-function getInfrastructureByICAO(
-  icao: string,
+function getInfrastructureById(
+  airportId: number,
 ): AirportInfrastructure | undefined {
   const db = getDatabase();
 
@@ -168,24 +172,24 @@ function getInfrastructureByICAO(
     .prepare(
       `SELECT 
         id, length_ft as lengthFt, width_ft as widthFt, surface, lighting
-      FROM runways WHERE airport_icao = ?`,
+      FROM runways WHERE airport_id = ?`,
     )
-    .all(icao);
+    .all(airportId);
 
   const hasTower = db
-    .prepare("SELECT has_tower FROM airports WHERE icao = ?")
-    .get(icao) as { has_tower: boolean } | undefined;
+    .prepare("SELECT has_tower FROM airports WHERE id = ?")
+    .get(airportId) as { has_tower: boolean } | undefined;
 
   const infra = db
     .prepare(
       `SELECT has_fbo as hasFBO, has_hangars as hasHangars, has_tie_downs as hasTieDowns
-      FROM infrastructure WHERE airport_icao = ?`,
+      FROM infrastructure WHERE airport_id = ?`,
     )
-    .get(icao) as any | undefined;
+    .get(airportId) as any | undefined;
 
   const fuelTypes = db
-    .prepare("SELECT fuel_type FROM fuel_available WHERE airport_icao = ?")
-    .all(icao) as Array<{ fuel_type: string }>;
+    .prepare("SELECT fuel_type FROM fuel_available WHERE airport_id = ?")
+    .all(airportId) as Array<{ fuel_type: string }>;
 
   if (!hasTower) return undefined;
 
@@ -202,23 +206,23 @@ function getInfrastructureByICAO(
 /**
  * Get operational data for an airport
  */
-function getOperationalByICAO(icao: string): AirportOperational | undefined {
+function getOperationalById(airportId: number): AirportOperational | undefined {
   const db = getDatabase();
 
   const operational = db
     .prepare(
-      `SELECT airac_cycle as airacCycle FROM operational WHERE airport_icao = ?`,
+      `SELECT airac_cycle as airacCycle FROM operational WHERE airport_id = ?`,
     )
-    .get(icao) as { airacCycle: string } | undefined;
+    .get(airportId) as { airacCycle: string } | undefined;
 
   if (!operational) return undefined;
 
   const frequencies = db
     .prepare(
       `SELECT atis, tower, ground, clearance, unicom, approach, departure
-      FROM frequencies WHERE airport_icao = ?`,
+      FROM frequencies WHERE airport_id = ?`,
     )
-    .get(icao) as any | undefined;
+    .get(airportId) as any | undefined;
 
   return {
     airacCycle: operational.airacCycle,

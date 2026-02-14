@@ -25,8 +25,9 @@ console.log(`${us.length} airports in the US`);
 - **[Quick Start](./docs/quick-start.md)** — Installation & first query
 - **[API Reference](./docs/api-reference.md)** — All functions & types
 - **[Examples](./docs/examples.md)** — Common use cases
-- **[CLI](./docs/cli.md)** — Command-line tool
 - **[Data Structure](./docs/data-structure.md)** — Type definitions
+- **[Extending](./docs/extending.md)** — Add custom data
+- **[CLI](./docs/cli.md)** — Command-line tool
 
 ## Features
 
