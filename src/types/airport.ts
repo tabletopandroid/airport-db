@@ -1,6 +1,6 @@
-import { AirportLocation } from "./infrastructure";
-import { AirportInfrastructure } from "./infrastructure";
-import { AirportOperational } from "./operational";
+import { AirportLocation } from "./infrastructure.js";
+import { AirportInfrastructure } from "./infrastructure.js";
+import { AirportOperational } from "./operational.js";
 
 /**
  * Airport classification types

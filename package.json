@@ -1,19 +1,61 @@
 {
   "name": "airport-db",
   "version": "0.1.0",
-  "description": "Airport database TypeScript project",
+  "description": "TypeScript query library for airport data",
+  "type": "module",
+  "bin": {
+    "airport-db": "./dist/bin/airport-db.js"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "homepage": "https://github.com/tabletop-android/airport-db",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tabletop-android/airport-db.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tabletop-android/airport-db/issues"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "dev": "ts-node src/index.ts",
-    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build",
     "watch": "tsc --watch"
   },
-  "keywords": [],
+  "keywords": [
+    "airport",
+    "database",
+    "query",
+    "sqlite",
+    "typescript",
+    "aviation",
+    "airac"
+  ],
   "author": "tabletop ANDROID",
-  "license": "ISC",
+  "license": "MIT",
+  "dependencies": {
+    "@tabletopandroid/airport-db-data-sqlite": "^0.1.0",
+    "better-sqlite3": "^12.6.2",
+    "chalk": "^5.3.0",
+    "commander": "^11.1.0"
+  },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.10.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"

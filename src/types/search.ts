@@ -1,5 +1,5 @@
-import { AirportType } from "./airport";
-import { RunwaySurface } from "./infrastructure";
+import { AirportType } from "./airport.js";
+import { RunwaySurface } from "./infrastructure.js";
 
 /**
  * Query options for searching airports
