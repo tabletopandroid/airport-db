@@ -12,13 +12,10 @@ const require = createRequire(import.meta.url);
  * Since this project uses local file reference, we construct the path
  */
 function getDatabasePath(): string {
-  // Get path from node_modules/.pnpm or similar structure
   try {
-    // Try resolving the data-sqlite package
-    const dataPkgPath =
-      require.resolve("@tabletopandroid/airport-db-data-sqlite");
-    const pkgRoot = path.dirname(dataPkgPath);
-    return path.join(pkgRoot, "data", "airports.sqlite");
+    const entryPath = require.resolve("@tabletopandroid/airport-db-data-sqlite");
+    const pkgRoot = path.dirname(path.dirname(entryPath));
+    return path.join(pkgRoot, "dist", "airports.sqlite");
   } catch (err) {
     console.error("Error resolving database path:", err);
     // Fallback to relative path (for development or direct usage)
@@ -27,7 +24,7 @@ function getDatabasePath(): string {
       "..",
       "..",
       "airport-db-data-sqlite",
-      "data",
+      "dist",
       "airports.sqlite",
     );
   }

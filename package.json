@@ -49,7 +49,7 @@
   "author": "tabletop ANDROID",
   "license": "MIT",
   "dependencies": {
-    "@tabletopandroid/airport-db-data-sqlite": "^0.1.0",
+    "@tabletopandroid/airport-db-data-sqlite": "^0.2.0",
     "better-sqlite3": "^12.6.2",
     "chalk": "^5.3.0",
     "commander": "^11.1.0"
