@@ -2,6 +2,8 @@
 
 This project uses Changesets for versioning and publishing.
 
+> npm version > git push > npm publish > gh release create
+
 1. Create a changeset:
 
 ```bash
