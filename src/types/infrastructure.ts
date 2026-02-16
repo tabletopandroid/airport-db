@@ -15,15 +15,35 @@ export type RunwaySurface =
  */
 export interface Runway {
   /** Unique runway identifier */
-  id: string;
+  id: number;
   /** Runway length in feet */
   lengthFt: number;
   /** Runway width in feet */
   widthFt: number;
   /** Surface material type */
   surface: RunwaySurface;
-  /** Whether the runway has lighting */
-  lighting: boolean;
+  /** Whether the runway is lighted */
+  lighted: boolean;
+  /** Optional metadata for each runway end */
+  ends?: RunwayEnd[];
+}
+
+/**
+ * Per-end runway metadata (typically two rows per runway)
+ */
+export interface RunwayEnd {
+  /** Runway end identifier (e.g. "09", "27") */
+  ident: string;
+  /** True heading in degrees */
+  headingDegT: number;
+  /** Latitude in decimal degrees */
+  latitudeDeg: number;
+  /** Longitude in decimal degrees */
+  longitudeDeg: number;
+  /** Displaced threshold in feet */
+  displacedThresholdFt?: number;
+  /** Elevation in feet */
+  elevationFt?: number;
 }
 
 /**

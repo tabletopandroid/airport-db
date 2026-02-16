@@ -423,9 +423,13 @@ function printAirport(airport: Airport): void {
   );
   if (airport.infrastructure.runways.length > 0) {
     airport.infrastructure.runways.forEach((rwy: any) => {
+      const runwayLabel =
+        Array.isArray(rwy.ends) && rwy.ends.length > 0
+          ? rwy.ends.map((end: any) => end.ident).join("/")
+          : `Runway ${rwy.id}`;
       console.log(
-        `    - ${rwy.id}: ${rwy.lengthFt}x${rwy.widthFt} ft, ${rwy.surface}${
-          rwy.lighting ? " (Lit)" : ""
+        `    - ${runwayLabel}: ${rwy.lengthFt}x${rwy.widthFt} ft, ${rwy.surface}${
+          rwy.lighted ? " (Lit)" : ""
         }`,
       );
     });

@@ -1,11 +1,11 @@
 import { getDatabase } from "./database.js";
 import type {
   Airport,
-  AirportIdentity,
-  AirportLocation,
   AirportInfrastructure,
   AirportOperational,
   SearchOptions,
+  Runway,
+  RunwayEnd,
 } from "./types";
 
 /**
@@ -124,7 +124,9 @@ export function getAirportsByState(
 export function getAirportsByCity(city: string): Airport[] {
   const db = getDatabase();
   const results = db
-    .prepare("SELECT icao FROM airports WHERE city = ? ORDER BY name")
+    .prepare(
+      "SELECT icao FROM airports WHERE city = ? COLLATE NOCASE ORDER BY name",
+    )
     .all(city) as Array<{ icao: string }>;
 
   return results
@@ -168,13 +170,63 @@ function getInfrastructureById(
 ): AirportInfrastructure | undefined {
   const db = getDatabase();
 
-  const runways = db
+  const runwayRows = db
     .prepare(
       `SELECT 
-        id, length_ft as lengthFt, width_ft as widthFt, surface, lighting
+        id, length_ft as lengthFt, width_ft as widthFt, surface, lighted
       FROM runways WHERE airport_id = ?`,
     )
-    .all(airportId);
+    .all(airportId) as Array<{
+    id: number;
+    lengthFt: number;
+    widthFt: number;
+    surface: string;
+    lighted: number | boolean;
+  }>;
+
+  const runwayEnds = db
+    .prepare(
+      `SELECT
+        runway_id as runwayId,
+        ident,
+        heading_degT as headingDegT,
+        latitude_deg as latitudeDeg,
+        longitude_deg as longitudeDeg,
+        displaced_threshold_ft as displacedThresholdFt,
+        elevation_ft as elevationFt
+      FROM runway_ends
+      WHERE runway_id IN (SELECT id FROM runways WHERE airport_id = ?)
+      ORDER BY runway_id, ident`,
+    )
+    .all(airportId) as Array<{ runwayId: number } & RunwayEnd>;
+
+  const runwayEndsByRunwayId = new Map<number, RunwayEnd[]>();
+  for (const runwayEnd of runwayEnds) {
+    const existing = runwayEndsByRunwayId.get(runwayEnd.runwayId);
+    const endData: RunwayEnd = {
+      ident: runwayEnd.ident,
+      headingDegT: runwayEnd.headingDegT,
+      latitudeDeg: runwayEnd.latitudeDeg,
+      longitudeDeg: runwayEnd.longitudeDeg,
+      displacedThresholdFt: runwayEnd.displacedThresholdFt,
+      elevationFt: runwayEnd.elevationFt,
+    };
+
+    if (existing) {
+      existing.push(endData);
+    } else {
+      runwayEndsByRunwayId.set(runwayEnd.runwayId, [endData]);
+    }
+  }
+
+  const runways: Runway[] = runwayRows.map((runway) => ({
+    id: runway.id,
+    lengthFt: runway.lengthFt,
+    widthFt: runway.widthFt,
+    surface: runway.surface as Runway["surface"],
+    lighted: Boolean(runway.lighted),
+    ends: runwayEndsByRunwayId.get(runway.id),
+  }));
 
   const hasTower = db
     .prepare("SELECT has_tower FROM airports WHERE id = ?")
@@ -194,7 +246,7 @@ function getInfrastructureById(
   if (!hasTower) return undefined;
 
   return {
-    runways: runways as any[],
+    runways,
     hasTower: hasTower.has_tower,
     fuelTypes: fuelTypes.map((f) => f.fuel_type),
     hasFBO: infra?.hasFBO,

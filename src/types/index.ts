@@ -14,6 +14,7 @@ export type {
   AirportInfrastructure,
   AirportLocation,
   Runway,
+  RunwayEnd,
   RunwaySurface,
   FuelType,
 } from "./infrastructure";

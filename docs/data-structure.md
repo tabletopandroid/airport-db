@@ -1,10 +1,10 @@
 # Data Structure
 
-Complete TypeScript types for airport data.
+Complete TypeScript-shaped data model for airport records.
 
 ## Airport
 
-Main object returned by all query functions.
+Main object returned by query functions.
 
 ```typescript
 interface Airport {
@@ -22,14 +22,14 @@ Codes and classification.
 ```typescript
 interface AirportIdentity {
   icao: string; // ICAO code (required, globally unique)
-  iata?: string; // IATA code (3 letters, not all airports have)
-  faa?: string; // FAA LID (US only)
+  iata?: string; // IATA code (3 letters, optional)
+  faa?: string; // FAA LID (mostly US)
   local?: string; // Local identifier
   name: string; // Airport name
   type: AirportType; // Classification
-  typeSource?: string; // Source of type info
+  typeSource?: AirportTypeSource; // Source of type info
   status?: AirportStatus; // Operational status
-  isPublicUse?: boolean; // Public vs private
+  isPublicUse?: boolean; // Public vs private use
 }
 ```
 
@@ -39,18 +39,19 @@ interface AirportIdentity {
 - `medium_airport`
 - `small_airport`
 - `heliport`
-- `airstrip`
+- `seaplane_base`
 - `balloonport`
-- `ultralight`
+- `ultralight_park`
 - `gliderport`
-- `hangliding`
-- `parachuting`
+- `closed`
+- `other`
 
 **AirportStatus values:**
 
 - `operational`
 - `closed`
-- `closed_permanently`
+- `military`
+- `private`
 
 ## AirportLocation
 
@@ -89,17 +90,25 @@ interface AirportInfrastructure {
 
 ### Runway
 
+Runway data is split between the `runways` and `runway_ends` tables.
+
 ```typescript
 interface Runway {
-  id: string; // Designation (e.g., "09/27")
+  id: number; // Runway row ID
   lengthFt: number; // Length in feet
   widthFt: number; // Width in feet
   surface: RunwaySurface; // Pavement type
-  lighting?: boolean; // Runway lights
-  coordinates?: {
-    latitude: number;
-    longitude: number;
-  };
+  lighted: boolean; // From `runways.lighted`
+  ends?: RunwayEnd[]; // Optional per-end metadata
+}
+
+interface RunwayEnd {
+  ident: string; // End identifier (e.g., "09", "27")
+  headingDegT: number; // True heading in degrees
+  latitudeDeg: number; // Decimal degrees
+  longitudeDeg: number; // Decimal degrees
+  displacedThresholdFt?: number; // Feet
+  elevationFt?: number; // Feet above MSL
 }
 ```
 
@@ -110,20 +119,17 @@ interface Runway {
 - `dirt`
 - `grass`
 - `gravel`
-- `metal`
 - `water`
 - `unknown`
 
 **FuelType values:**
 
-- `Jet A`
-- `Jet A-1`
-- `Jet B`
-- `TS-1`
-- `100LL` (80/87)
-- `100` (87/91)
-- `Autogas` (Mogas)
-- `Unknown`
+- `100LL`
+- `JetA`
+- `MOGAS`
+- `UL94`
+- `SAF`
+- Any custom string value
 
 ## AirportOperational
 
@@ -140,13 +146,13 @@ interface AirportOperational {
 
 ```typescript
 interface AirportFrequencies {
-  atis?: number; // MHz
-  tower?: number; // MHz
-  ground?: number; // MHz
-  clearance?: number; // MHz
-  unicom?: number; // MHz
-  approach?: number; // MHz
-  departure?: number; // MHz
+  atis?: string;
+  tower?: string;
+  ground?: string;
+  clearance?: string;
+  unicom?: string;
+  approach?: string;
+  departure?: string;
 }
 ```
 
@@ -170,8 +176,8 @@ interface SearchOptions {
 
 ## Notes
 
-- **Optional fields** — `?` indicates data may not be available
-- **Elevations** — All in feet above mean sea level
-- **Coordinates** — WGS84 (EPSG:4326)
-- **AIRAC** — Format "YYCC": YY = year (26 = 2026), CC = cycle (01-13)
-- **Frequencies** — Integer MHz values (divide by 1000 for MHz, e.g., `11895` = 118.95 MHz)
+- Optional fields: `?` indicates data may not be available.
+- Elevations: all elevation fields are feet above mean sea level.
+- Coordinates: WGS84 (EPSG:4326).
+- AIRAC: format `YYCC` where `YY` is year and `CC` is cycle number.
+- Runway refactor: runway ends are modeled separately from base runway dimensions/surface.
