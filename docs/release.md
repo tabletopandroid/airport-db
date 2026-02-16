@@ -4,6 +4,8 @@ This project uses Changesets for versioning and publishing.
 
 > npm version > git push > npm publish > gh release create
 
+## Maintainer Flow
+
 1. Create a changeset:
 
 ```bash
@@ -18,25 +20,19 @@ npm run version-packages
 
 3. Commit the version/changelog changes.
 
-4. Publish to npmjs:
+4. Push the version commit to `main`.
 
-```bash
-npm run publish-packages
-```
+The GitHub Action in `.github/workflows/release.yml` is the single publish path:
+- publishes package to npmjs
+- creates GitHub Release for the same version tag
 
-5. Create a GitHub Release for the published version:
+## CI Requirements
 
-```bash
-npm run release:github
-```
+Configure repository secret:
+- `NPM_TOKEN`: npm automation token with publish rights for `airport-db`
 
-Or run npm publish + GitHub release together:
+Built-in GitHub auth:
+- `GITHUB_TOKEN` is provided automatically by GitHub Actions and is used for release creation.
 
-```bash
-npm run release
-```
-
-Requirements:
-
-- npm auth configured (`npm login` locally or `NPM_TOKEN` in CI).
-- GitHub CLI (`gh`) installed and authenticated for release creation.
+Notes:
+- You can still run `npm run publish-packages` manually, but the preferred publish path is the GitHub Action.

@@ -44,8 +44,7 @@
     "dev": "ts-node src/index.ts",
     "publish-packages": "changeset publish",
     "prepublishOnly": "npm run build",
-    "release": "npm run publish-packages && npm run release:github",
-    "release:github": "node scripts/github-release.mjs",
+    "release": "node scripts/github-release.mjs",
     "test": "npm run build && node --test \"test/*.test.mjs\"",
     "version-packages": "changeset version",
     "watch": "tsc --watch"
