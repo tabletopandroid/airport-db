@@ -5,19 +5,44 @@
 ## Install
 
 ```bash
-npm install airport-db @tabletopandroid/airport-db-data-sqlite
+npm install airport-db
 ```
 
 ## Use
 
-```typescript
-import { getAirportByICAO, getAirportsByCountry } from "airport-db";
+Two primary use cases are supported:
 
-const airport = getAirportByICAO("KLZU");
-console.log(airport?.identity.name); // Gwinnett County Airport
+- Node.js (library and CLI): no initialization required.
+- Browser apps (Vite/Webpack): call `initializeBrowserDatabase()` once before querying.
+
+### Node.js
+
+```js
+import { getAirportsByCountry } from "airport-db";
 
 const us = getAirportsByCountry("US");
 console.log(`${us.length} airports in the US`);
+```
+
+### Browser (Vite/Webpack)
+
+```typescript
+import { initializeBrowserDatabase, getAirportByICAO } from "airport-db";
+
+await initializeBrowserDatabase();
+
+const airport = getAirportByICAO("KLAX");
+```
+
+No extra asset setup is required. `airport-db` ships browser assets and loads them automatically.
+
+Optional: pass custom asset URLs if you want to host assets yourself.
+
+```typescript
+await initializeBrowserDatabase({
+  databaseUrl: "/airports.sqlite",
+  wasmUrl: "/sql-wasm.wasm",
+});
 ```
 
 ## Get Started
@@ -28,6 +53,7 @@ console.log(`${us.length} airports in the US`);
 - **[Data Structure](./docs/data-structure.md)** — Type definitions
 - **[Extending](./docs/extending.md)** — Add custom data
 - **[CLI](./docs/cli.md)** — Command-line tool
+- **[Release Workflow](./docs/release.md)** - Release workflow
 
 ## Features
 

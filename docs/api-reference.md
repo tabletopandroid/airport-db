@@ -2,6 +2,11 @@
 
 Complete function documentation.
 
+## Environment
+
+- Node.js: all functions are supported with no initialization.
+- Browser: call `initializeBrowserDatabase(...)` once before querying.
+
 ## Identity Lookups
 
 ### `getAirportByICAO(icao: string): Airport | undefined`
@@ -113,6 +118,36 @@ interface SearchOptions {
 ```
 
 ## Utility Functions
+
+### `initializeBrowserDatabase(options?: BrowserDatabaseInitOptions): Promise<void>`
+
+Browser-only initialization for SQL.js.
+
+```typescript
+await initializeBrowserDatabase({
+  databaseUrl: "/airports.sqlite",
+  wasmUrl: "/sql-wasm.wasm",
+});
+```
+
+Or with defaults (recommended):
+
+```typescript
+await initializeBrowserDatabase();
+```
+
+**BrowserDatabaseInitOptions:**
+
+```typescript
+interface BrowserDatabaseInitOptions {
+  databaseUrl?: string | ArrayBuffer | Uint8Array;
+  wasmUrl?: string;
+}
+```
+
+### `isBrowserDatabaseInitialized(): boolean`
+
+Returns whether browser database initialization has completed.
 
 ### `countAirports(): number`
 

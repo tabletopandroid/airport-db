@@ -28,13 +28,26 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "browser": "./dist/browser.js",
+      "node": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./browser": {
+      "types": "./dist/browser.d.ts",
+      "default": "./dist/browser.js"
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run build:assets",
+    "build:assets": "node scripts/build-browser-assets.mjs",
+    "changeset": "changeset",
     "dev": "ts-node src/index.ts",
+    "publish-packages": "changeset publish",
     "prepublishOnly": "npm run build",
+    "release": "npm run publish-packages && npm run release:github",
+    "release:github": "node scripts/github-release.mjs",
+    "test": "npm run build && node --test \"test/*.test.mjs\"",
+    "version-packages": "changeset version",
     "watch": "tsc --watch"
   },
   "keywords": [
@@ -52,11 +65,14 @@
     "@tabletopandroid/airport-db-data-sqlite": "^0.2.0",
     "better-sqlite3": "^12.6.2",
     "chalk": "^5.3.0",
-    "commander": "^11.1.0"
+    "commander": "^11.1.0",
+    "sql.js": "^1.13.0"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.7",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.10.5",
+    "@types/sql.js": "^1.4.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   }

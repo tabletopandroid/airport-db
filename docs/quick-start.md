@@ -2,13 +2,16 @@
 
 Get up and running in 2 minutes.
 
+## Runtime Notes
+
+- Node.js works out of the box.
+- Browser apps are supported via SQL.js and require one-time initialization.
+
 ## 1. Install
 
 ```bash
-npm install airport-db @tabletopandroid/airport-db-data-sqlite
+npm install airport-db
 ```
-
-The data package is required for the SQLite database.
 
 ## 2. Import & Query
 
@@ -21,6 +24,19 @@ if (airport) {
   console.log(`${airport.location.city}, ${airport.location.country}`);
 }
 ```
+
+### Browser (Vite/Webpack)
+
+```typescript
+import { initializeBrowserDatabase, getAirportByICAO } from "airport-db";
+
+await initializeBrowserDatabase();
+
+const airport = getAirportByICAO("KLZU");
+```
+
+`initializeBrowserDatabase(...)` must be called before any query function.
+No extra browser asset setup is required.
 
 ## 3. Common Tasks
 

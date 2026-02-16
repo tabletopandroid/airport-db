@@ -1,0 +1,129 @@
+import initSqlJs from "sql.js";
+import type { Database as SqlJsDatabase, SqlJsStatic } from "sql.js";
+import type {
+  BrowserDatabaseInitOptions,
+  QueryDatabase,
+  QueryStatement,
+} from "./database.js";
+
+class BrowserStatement implements QueryStatement {
+  constructor(
+    private readonly db: SqlJsDatabase,
+    private readonly sql: string,
+  ) {}
+
+  get(...params: any[]): any {
+    const stmt = this.db.prepare(this.sql);
+    try {
+      if (params.length > 0) {
+        stmt.bind(params as any[]);
+      }
+
+      if (!stmt.step()) {
+        return undefined;
+      }
+
+      return stmt.getAsObject();
+    } finally {
+      stmt.free();
+    }
+  }
+
+  all(...params: any[]): any[] {
+    const stmt = this.db.prepare(this.sql);
+    try {
+      if (params.length > 0) {
+        stmt.bind(params as any[]);
+      }
+
+      const rows: any[] = [];
+      while (stmt.step()) {
+        rows.push(stmt.getAsObject());
+      }
+      return rows;
+    } finally {
+      stmt.free();
+    }
+  }
+}
+
+class BrowserDatabase implements QueryDatabase {
+  constructor(private readonly db: SqlJsDatabase) {}
+
+  prepare(sql: string): QueryStatement {
+    return new BrowserStatement(this.db, sql);
+  }
+
+  close(): void {
+    this.db.close();
+  }
+}
+
+let dbInstance: BrowserDatabase | null = null;
+const DEFAULT_DATABASE_URL = new URL(
+  "./assets/airports.sqlite",
+  import.meta.url,
+).toString();
+const DEFAULT_SQLJS_WASM_URL = new URL(
+  "./assets/sql-wasm.wasm",
+  import.meta.url,
+).toString();
+
+function resolveBytes(
+  databaseUrl: string | ArrayBuffer | Uint8Array,
+): Promise<Uint8Array> | Uint8Array {
+  if (typeof databaseUrl === "string") {
+    return fetch(databaseUrl).then(async (response) => {
+      if (!response.ok) {
+        throw new Error(
+          `[airport-db] Failed to fetch SQLite database from "${databaseUrl}" (${response.status} ${response.statusText})`,
+        );
+      }
+      return new Uint8Array(await response.arrayBuffer());
+    });
+  }
+
+  if (databaseUrl instanceof Uint8Array) {
+    return databaseUrl;
+  }
+
+  return new Uint8Array(databaseUrl);
+}
+
+export async function initializeBrowserDatabase(
+  options: BrowserDatabaseInitOptions = {},
+): Promise<void> {
+  if (dbInstance) {
+    return;
+  }
+
+  const databaseUrl = options.databaseUrl || DEFAULT_DATABASE_URL;
+
+  const sqlJsConfig: { locateFile: (file: string) => string } = {
+    locateFile: () => options.wasmUrl || DEFAULT_SQLJS_WASM_URL,
+  };
+
+  const SQL: SqlJsStatic = await initSqlJs(sqlJsConfig);
+  const bytes = await resolveBytes(databaseUrl);
+  dbInstance = new BrowserDatabase(new SQL.Database(bytes));
+}
+
+export function isBrowserDatabaseInitialized(): boolean {
+  return dbInstance !== null;
+}
+
+export function getDatabase(): QueryDatabase {
+  if (!dbInstance) {
+    throw new Error(
+      "[airport-db] Browser database is not initialized. Call initializeBrowserDatabase(...) before querying.",
+    );
+  }
+  return dbInstance;
+}
+
+export function closeDatabase(): void {
+  if (dbInstance) {
+    dbInstance.close();
+    dbInstance = null;
+  }
+}

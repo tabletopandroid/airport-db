@@ -3,6 +3,21 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { createRequire } from "module";
 
+export interface BrowserDatabaseInitOptions {
+  databaseUrl?: string | ArrayBuffer | Uint8Array;
+  wasmUrl?: string;
+}
+
+export interface QueryStatement {
+  get: (...params: any[]) => any;
+  all: (...params: any[]) => any[];
+}
+
+export interface QueryDatabase {
+  prepare: (sql: string) => QueryStatement;
+  close: () => void;
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const require = createRequire(import.meta.url);
@@ -36,7 +51,7 @@ function getDatabasePath(): string {
  */
 let dbInstance: Database.Database | null = null;
 
-export function getDatabase(): Database.Database {
+export function getDatabase(): QueryDatabase {
   if (!dbInstance) {
     const dbPath = getDatabasePath();
     dbInstance = new Database(dbPath, { readonly: true });
@@ -52,6 +67,18 @@ export function closeDatabase(): void {
     dbInstance.close();
     dbInstance = null;
   }
+}
+
+export async function initializeBrowserDatabase(
+  _options?: BrowserDatabaseInitOptions,
+): Promise<void> {
+  throw new Error(
+    "[airport-db] initializeBrowserDatabase is only available in browser builds.",
+  );
+}
+
+export function isBrowserDatabaseInitialized(): boolean {
+  return false;
 }
 
 export default getDatabase;
