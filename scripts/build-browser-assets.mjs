@@ -24,7 +24,9 @@ function main() {
   const repoRoot = path.resolve(path.dirname(thisFile), "..");
   const distAssetsDir = path.join(repoRoot, "dist", "assets");
 
-  const dataPkgRoot = resolvePackageRoot("@tabletopandroid/airport-db-data-sqlite");
+  const dataPkgRoot = resolvePackageRoot(
+    "@tabletopandroid/airport-db-data-sqlite",
+  );
   const sqliteSource = path.join(dataPkgRoot, "dist", "airports.sqlite");
   const sqliteTarget = path.join(distAssetsDir, "airports.sqlite");
 

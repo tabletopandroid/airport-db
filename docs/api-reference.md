@@ -124,17 +124,26 @@ interface SearchOptions {
 Browser-only initialization for SQL.js.
 
 ```typescript
+import databaseUrl from "airport-db/assets/sqlite?url";
+import wasmUrl from "airport-db/assets/wasm?url";
+
 await initializeBrowserDatabase({
-  databaseUrl: "/airports.sqlite",
-  wasmUrl: "/sql-wasm.wasm",
+  databaseUrl,
+  wasmUrl,
 });
 ```
 
-Or with defaults (recommended):
+This keeps browser initialization on local package assets and allows build tools to rewrite hashed asset filenames.
+
+Or with defaults:
 
 ```typescript
 await initializeBrowserDatabase();
 ```
+
+Default browser behavior:
+- Attempts SQLite download from `https://cdn.tabletopandroid.com/v0.2.1/airports.sqlite`
+- Falls back to bundled package assets if CDN fetch fails
 
 **BrowserDatabaseInitOptions:**
 
@@ -144,6 +153,8 @@ interface BrowserDatabaseInitOptions {
   wasmUrl?: string;
 }
 ```
+
+If `databaseUrl` is cross-origin, the host must allow CORS (for example `Access-Control-Allow-Origin: *`).
 
 ### `isBrowserDatabaseInitialized(): boolean`
 

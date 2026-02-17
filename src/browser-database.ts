@@ -60,7 +60,9 @@ class BrowserDatabase implements QueryDatabase {
 }
 
 let dbInstance: BrowserDatabase | null = null;
-const DEFAULT_DATABASE_URL = new URL(
+const DEFAULT_CDN_DATABASE_URL =
+  "https://cdn.tabletopandroid.com/v0.2.1/airports.sqlite";
+const BUNDLED_DATABASE_URL = new URL(
   "./assets/airports.sqlite",
   import.meta.url,
 ).toString();
@@ -69,25 +71,49 @@ const DEFAULT_SQLJS_WASM_URL = new URL(
   import.meta.url,
 ).toString();
 
-function resolveBytes(
-  databaseUrl: string | ArrayBuffer | Uint8Array,
-): Promise<Uint8Array> | Uint8Array {
-  if (typeof databaseUrl === "string") {
-    return fetch(databaseUrl).then(async (response) => {
-      if (!response.ok) {
-        throw new Error(
-          `[airport-db] Failed to fetch SQLite database from "${databaseUrl}" (${response.status} ${response.statusText})`,
-        );
-      }
-      return new Uint8Array(await response.arrayBuffer());
+function resolveBytes(databaseBytes: ArrayBuffer | Uint8Array): Uint8Array {
+  if (databaseBytes instanceof Uint8Array) {
+    return databaseBytes;
+  }
+
+  return new Uint8Array(databaseBytes);
+}
+
+function isLikelyCorsOrNetworkError(error: unknown): boolean {
+  if (!(error instanceof Error)) {
+    return false;
+  }
+  return error.name === "TypeError";
+}
+
+async function fetchDatabaseBytesFromUrl(
+  databaseUrl: string,
+): Promise<Uint8Array> {
+  try {
+    const response = await fetch(databaseUrl, {
+      method: "GET",
+      mode: "cors",
+      credentials: "omit",
     });
-  }
 
-  if (databaseUrl instanceof Uint8Array) {
-    return databaseUrl;
-  }
+    if (!response.ok) {
+      throw new Error(
+        `[airport-db] Failed to fetch SQLite database from "${databaseUrl}" (${response.status} ${response.statusText})`,
+      );
+    }
 
-  return new Uint8Array(databaseUrl);
+    return new Uint8Array(await response.arrayBuffer());
+  } catch (error) {
+    if (isLikelyCorsOrNetworkError(error)) {
+      throw new Error(
+        `[airport-db] Could not fetch SQLite database from "${databaseUrl}". ` +
+          "This is commonly caused by CORS or network restrictions. " +
+          "If you use a custom CDN/database URL, ensure it serves Access-Control-Allow-Origin. " +
+          "You can also pass a same-origin URL or ArrayBuffer/Uint8Array bytes to initializeBrowserDatabase(...).",
+      );
+    }
+    throw error;
+  }
 }
 
 export async function initializeBrowserDatabase(
@@ -97,14 +123,25 @@ export async function initializeBrowserDatabase(
     return;
   }
 
-  const databaseUrl = options.databaseUrl || DEFAULT_DATABASE_URL;
-
   const sqlJsConfig: { locateFile: (file: string) => string } = {
     locateFile: () => options.wasmUrl || DEFAULT_SQLJS_WASM_URL,
   };
 
   const SQL: SqlJsStatic = await initSqlJs(sqlJsConfig);
-  const bytes = await resolveBytes(databaseUrl);
+
+  let bytes: Uint8Array;
+  if (typeof options.databaseUrl === "string") {
+    bytes = await fetchDatabaseBytesFromUrl(options.databaseUrl);
+  } else if (options.databaseUrl) {
+    bytes = resolveBytes(options.databaseUrl);
+  } else {
+    try {
+      bytes = await fetchDatabaseBytesFromUrl(DEFAULT_CDN_DATABASE_URL);
+    } catch (_cdnError) {
+      bytes = await fetchDatabaseBytesFromUrl(BUNDLED_DATABASE_URL);
+    }
+  }
+
   dbInstance = new BrowserDatabase(new SQL.Database(bytes));
 }
 

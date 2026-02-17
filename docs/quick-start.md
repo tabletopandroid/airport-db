@@ -28,15 +28,18 @@ if (airport) {
 ### Browser (Vite/Webpack)
 
 ```typescript
+import databaseUrl from "airport-db/assets/sqlite?url";
+import wasmUrl from "airport-db/assets/wasm?url";
 import { initializeBrowserDatabase, getAirportByICAO } from "airport-db";
 
-await initializeBrowserDatabase();
+await initializeBrowserDatabase({ databaseUrl, wasmUrl });
 
 const airport = getAirportByICAO("KLZU");
 ```
 
 `initializeBrowserDatabase(...)` must be called before any query function.
-No extra browser asset setup is required.
+Use local package assets by importing URL strings so your bundler can rewrite hashed output paths.
+If your bundler does not support `?url`, use its equivalent asset URL import behavior.
 
 ## 3. Common Tasks
 

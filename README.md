@@ -27,23 +27,28 @@ console.log(`${us.length} airports in the US`);
 ### Browser (Vite/Webpack)
 
 ```typescript
+import databaseUrl from "airport-db/assets/sqlite?url";
+import wasmUrl from "airport-db/assets/wasm?url";
 import { initializeBrowserDatabase, getAirportByICAO } from "airport-db";
 
-await initializeBrowserDatabase();
+await initializeBrowserDatabase({ databaseUrl, wasmUrl });
 
 const airport = getAirportByICAO("KLAX");
 ```
 
-No extra asset setup is required. `airport-db` ships browser assets and loads them automatically.
+Use local package assets for browser initialization. Importing asset URLs lets Vite/Webpack rewrite hashed filenames correctly at build time.
+If your bundler does not support `?url`, use its equivalent "asset URL import" configuration.
 
 Optional: pass custom asset URLs if you want to host assets yourself.
 
 ```typescript
 await initializeBrowserDatabase({
-  databaseUrl: "/airports.sqlite",
-  wasmUrl: "/sql-wasm.wasm",
+  databaseUrl: "/url/to/other/airports.sqlite",
+  wasmUrl: "/url/to/other/sql-wasm.wasm",
 });
 ```
+
+If you use a custom cross-origin `databaseUrl`, your host/CDN must return `Access-Control-Allow-Origin` for browser access.
 
 ## Get Started
 
